@@ -16,7 +16,7 @@ warnings.filterwarnings("ignore", category=BiopythonDeprecationWarning)
 script_dir=os.path.dirname(__file__)
 
 
-def get_torch_model(ckpt_path, device='cuda'):
+def get_torch_model(ckpt_path, device='cpu'):
     model = AMPNN(
         embed_dim = 128,
         edge_dim = 27,
@@ -46,13 +46,13 @@ def cal_plddt(pdb_file):
                     bs.append(b)
     return np.mean(bs)
 
-def make_one_scan(pdb_file, torch_models:list, device, save_pt=False):
+def make_one_scan(pdb_file, torch_models:list, device='cpu', save_pt=False):
     protbb = read_pdb_to_protbb(pdb_file)
     node, edge, seq = get_neighbor(protbb, noise_level=0.0)
     probs = []
     with torch.no_grad():
         for torch_model in torch_models:
-            torch_model=torch_model.to(device)
+            #torch_model=torch_model.to(device)
             logits, _ = torch_model(node.to(device), edge.to(device))
             prob = F.softmax(logits, dim=-1).detach().cpu().numpy()
             probs.append(prob)
@@ -89,9 +89,9 @@ def main(args):
     run_dir = bool(input_dir)
 
     # device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    device= torch.device(device)
-    torch_model_c = get_torch_model(os.path.join(script_dir,'..','pythia-c.pt'))
-    torch_model_p = get_torch_model(os.path.join(script_dir,'..','pythia-p.pt'))
+    #device= torch.device(device)
+    torch_model_c = get_torch_model(os.path.join(script_dir,'..','pythia-c.pt'),device=device)
+    torch_model_p = get_torch_model(os.path.join(script_dir,'..','pythia-p.pt'),device=device)
 
     if run_dir:
         files = glob.glob(f'{input_dir}*.pdb')
