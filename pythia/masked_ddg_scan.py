@@ -68,6 +68,10 @@ def make_one_scan(pdb_file, torch_models:list, device='cpu', save_pt=False):
         torch.save(data_dict, f'{pdb_file.replace(".pdb", "")}_pred_mask.pt')
         print(f"save {pdb_file.replace('.pdb', '')}_pred_mask.pt")
     else:
+        PSSM_Alphabet = 'ARNDCQEGHILKMFPSTWYV'
+        Bio_Alphabet = ''.join([index_to_one(i) for i in range(20)])
+        energy_data_list = []
+    
         with open(f'{pdb_file.replace(".pdb", "")}_pred_mask.txt', 'w') as f:
             for pos, aa in enumerate(protbb.seq):
                 energy = np.zeros(21)
@@ -75,6 +79,34 @@ def make_one_scan(pdb_file, torch_models:list, device='cpu', save_pt=False):
                     energy += -np.log(prob[pos]/prob[pos][int(aa.item())])
                 for i in range(20):
                     f.write(f"{index_to_one(int(aa.item()))}{pos+1}{index_to_one(i)} {energy[i]}\n")
+                
+                # Convert energy values to a dictionary
+                energy_dict = dict(zip(Bio_Alphabet, energy))
+                
+                energy_dict["pos"] = pos
+                
+               # Create a DataFrame from the dictionary
+                energy_df = pd.DataFrame([energy_dict])
+
+                # Reorder the DataFrame based on PSSM_Alphabet
+                energy_df = energy_df.reindex(columns=list(PSSM_Alphabet)+['pos'])
+
+
+                # Append the DataFrame to the list
+                energy_data_list.append(energy_df)
+
+            # Concatenate the list of DataFrames into one DataFrame
+            energy_data = pd.concat(energy_data_list, ignore_index=True)
+
+            # Set the "pos" column as the row index
+            energy_data = energy_data.set_index("pos")
+
+            # Transpose the DataFrame and reset the index
+            energy_data = energy_data.T.reset_index()
+
+            # Save the DataFrame to a CSV file
+            energy_data.to_csv(f'{pdb_file.replace(".pdb", "")}_pred_mask.csv', index=False)
+            print(f"Saved {pdb_file.replace('.pdb', '')}_pred_mask.csv")
 
 
 
