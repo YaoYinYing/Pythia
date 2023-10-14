@@ -5,11 +5,15 @@ from pdb_utils import *
 from Bio.PDB.Polypeptide import index_to_one
 from tqdm import tqdm
 import argparse
-
+from joblib import Parallel,delayed
 import warnings
 from Bio import BiopythonDeprecationWarning
+import os
+import pandas as pd
 
 warnings.filterwarnings("ignore", category=BiopythonDeprecationWarning)
+
+script_dir=os.path.dirname(__file__)
 
 
 def get_torch_model(ckpt_path, device='cuda'):
@@ -48,6 +52,7 @@ def make_one_scan(pdb_file, torch_models:list, device, save_pt=False):
     probs = []
     with torch.no_grad():
         for torch_model in torch_models:
+            torch_model=torch_model.to(device)
             logits, _ = torch_model(node.to(device), edge.to(device))
             prob = F.softmax(logits, dim=-1).detach().cpu().numpy()
             probs.append(prob)
@@ -72,6 +77,7 @@ def make_one_scan(pdb_file, torch_models:list, device, save_pt=False):
                     f.write(f"{index_to_one(int(aa.item()))}{pos+1}{index_to_one(i)} {energy[i]}\n")
 
 
+
 def main(args):
     input_dir = args.input_dir
     pdb_filename = args.pdb_filename
@@ -83,8 +89,9 @@ def main(args):
     run_dir = bool(input_dir)
 
     # device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    torch_model_c = get_torch_model("../pythia-c.pt")
-    torch_model_p = get_torch_model("../pythia-p.pt")
+    device= torch.device(device)
+    torch_model_c = get_torch_model(os.path.join(script_dir,'..','pythia-c.pt'))
+    torch_model_p = get_torch_model(os.path.join(script_dir,'..','pythia-p.pt'))
 
     if run_dir:
         files = glob.glob(f'{input_dir}*.pdb')
@@ -108,7 +115,7 @@ if __name__ == '__main__':
     parser.add_argument('--check_plddt', action='store_true', help='Flag to check pLDDT value.')
     parser.add_argument('--plddt_cutoff', type=float, default=95, help='pLDDT cutoff value.')
     parser.add_argument('--n_jobs', type=int, default=2, help='Number of parallel jobs.')
-    parser.add_argument('--device', type=str, default="cuda:0", help='Try to use gpu:0')
+    parser.add_argument('--device', type=str, default="cpu", help='Try to use cpu')
     
     args = parser.parse_args()
     main(args)
