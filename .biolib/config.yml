@@ -2,11 +2,12 @@ biolib_version: 2
 modules:
     main:
         image: 'dockerhub://yaoyinying/pythia-wubianlab:latest'
+        command:  --save_dir /home/biolib/pythia-wubianlab/save_dir
         working_directory: /home/biolib/
         input_files:
             - COPY / /home/biolib/
         output_files:
-            - COPY /home/biolib/ /
+            - COPY /home/biolib/pythia-wubianlab/save_dir/ /
         source_files: []
 
 arguments:

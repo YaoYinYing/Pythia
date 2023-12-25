@@ -13,15 +13,13 @@ from docker import types
 from typing import Tuple
 
 flags.DEFINE_string("input_dir", None, "Input directory path.")
+flags.DEFINE_string("pdb_filename", None, "Path to a specific PDB filename.")
+flags.DEFINE_string("save_dir", "./pythia_predictions", "Saving directory path.")
 
 
 flags.DEFINE_enum("device", "cpu", ["cpu", "cuda"], "Try to use cpu")
 
 flags.DEFINE_integer("n_jobs", os.cpu_count(), "Number of parallel jobs")
-
-
-flags.DEFINE_string("pdb_filename", None, "Path to a specific PDB filename.")
-
 
 flags.DEFINE_bool(
     "check_plddt", False, "Generate a human-friendly report file in xlsx format"
@@ -51,29 +49,6 @@ except:
     os.makedirs(_ROOT_MOUNT_DIRECTORY, exist_ok=True)
 
 
-def _create_mount(mount_name: str, path: str) -> Tuple[types.Mount, str]:
-    """Create a mount point for each file and directory used by the model."""
-    path = pathlib.Path(path).absolute()
-    target_path = pathlib.Path(_ROOT_MOUNT_DIRECTORY, mount_name)
-
-    if path.is_dir():
-        source_path = path
-        mounted_path = target_path
-    else:
-        source_path = path.parent
-        mounted_path = pathlib.Path(target_path, path.name)
-    if not source_path.exists():
-        raise ValueError(
-            f'Failed to find source directory "{source_path}" to '
-            "mount in Docker container."
-        )
-    print("Mounting %s -> %s", source_path, target_path)
-    mount = types.Mount(
-        target=str(target_path), source=str(source_path), type="bind", read_only=True
-    )
-    return mount, str(mounted_path)
-
-
 def main(argv):
     if len(argv) > 1:
         raise app.UsageError("Too many command-line arguments.")
@@ -94,6 +69,13 @@ def main(argv):
         input_target_path = os.path.join(_ROOT_MOUNT_DIRECTORY, "input")
         mounts.append(types.Mount(input_target_path, str(pdb_filename), type="bind"))
         command_args.append(f"--pdb_filename={input_target_path}")
+
+    save_dir = pathlib.Path(FLAGS.save_dir).resolve()
+
+    os.makedirs(save_dir, exist_ok=True)
+    output_target_path = os.path.join(_ROOT_MOUNT_DIRECTORY, "output")
+    mounts.append(types.Mount(output_target_path, str(save_dir), type="bind"))
+    command_args.append(f"--save_dir={output_target_path}")
 
     command_args.extend(
         [
