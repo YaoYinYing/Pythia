@@ -46,8 +46,7 @@ jobs:
         source pythia-wubianlab_test/bin/activate
         pip install -r docker/requirements.txt
         tar xf ${{ env.REPO }}/s669_AF_PDBs.tar.gz
-        python ${{ env.REPO }}/docker/run_docker.py --input_dir ./s669_AF_PDBs --save_dir ./pythia_predictions/
-        ls ./s669_AF_PDBs/
+        python ${{ env.REPO }}/docker/run_docker.py --pdb_filename ./s669_AF_PDBs/1A0F.pdb --save_dir ./pythia_predictions/
         ls ./pythia_predictions/
         deactivate 
         
