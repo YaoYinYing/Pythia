@@ -12,20 +12,11 @@ from absl import flags
 from docker import types
 from typing import Tuple
 
-flags.DEFINE_string("input_dir", None, "Input directory path.")
 flags.DEFINE_string("pdb_filename", None, "Path to a specific PDB filename.")
 flags.DEFINE_string("save_dir", "./pythia_predictions", "Saving directory path.")
 
 
 flags.DEFINE_enum("device", "cpu", ["cpu", "cuda"], "Try to use cpu")
-
-flags.DEFINE_integer("n_jobs", os.cpu_count(), "Number of parallel jobs")
-
-flags.DEFINE_bool(
-    "check_plddt", False, "Generate a human-friendly report file in xlsx format"
-)
-
-flags.DEFINE_float("plddt_cutoff", 95, "pLDDT cutoff value.")
 
 flags.DEFINE_string(
     "docker_image_name", "pythia-wubianlab", "Name of the Pythia Docker image."
@@ -57,16 +48,9 @@ def main(argv):
     command_args = []
 
     # os.makedirs(save_dir, exist_ok=True)
-    if not FLAGS.input_dir and not FLAGS.pdb_filename:
-        raise app.UsageError("Please specify input pdb file or path!")
-    if FLAGS.input_dir:
-        input_dir = pathlib.Path(FLAGS.input_dir).resolve()
-        input_target_path = os.path.join(_ROOT_MOUNT_DIRECTORY, "input")
-        mounts.append(types.Mount(input_target_path, str(input_dir), type="bind"))
-        command_args.append(f"--input_dir={input_target_path}")
-    elif FLAGS.pdb_filename:
+    if FLAGS.pdb_filename:
         pdb_filename = pathlib.Path(FLAGS.pdb_filename).resolve()
-        input_target_path = os.path.join(_ROOT_MOUNT_DIRECTORY, "input")
+        input_target_path = os.path.join(_ROOT_MOUNT_DIRECTORY, "input", os.path.basename(pdb_filename))
         mounts.append(types.Mount(input_target_path, str(pdb_filename), type="bind"))
         command_args.append(f"--pdb_filename={input_target_path}")
 
@@ -80,16 +64,9 @@ def main(argv):
     command_args.extend(
         [
             f"--device={FLAGS.device}",
-            f"--n_jobs={FLAGS.n_jobs}",
         ]
     )
-    if FLAGS.check_plddt:
-        command_args.extend(
-            [
-                f"--check_plddt",
-                f"--plddt_cutoff={FLAGS.plddt_cutoff}",
-            ]
-        )
+
 
     print(command_args)
 
@@ -112,4 +89,7 @@ def main(argv):
 
 
 if __name__ == "__main__":
+    flags.mark_flags_as_required([
+        'pdb_filename',
+    ])
     app.run(main)

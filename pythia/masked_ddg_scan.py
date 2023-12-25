@@ -1,11 +1,8 @@
-import glob
 import gzip
 from model import *
 from pdb_utils import *
 from Bio.PDB.Polypeptide import index_to_one
-from tqdm import tqdm
 import argparse
-from joblib import Parallel, delayed
 import warnings
 from Bio import BiopythonDeprecationWarning
 import os
@@ -71,17 +68,21 @@ def make_one_scan(
             for prob in probs:
                 energy += -np.log(prob[pos] / prob[pos][aa_index])
             data_dict[f"{one_letter_aa}_{pos+1}"] = np.float16(energy)
-        torch.save(data_dict, os.path.basename(pdb_file).replace(".pdb", "_pred_mask.pt"))
-        print(f'save {os.path.basename(pdb_file).replace(".pdb", "_pred_mask.pt")}')
+        pt_path = os.path.join(
+            save_dir, os.path.basename(pdb_file).replace(".pdb", "_pred_mask.pt")
+        )
+        torch.save(data_dict, pt_path)
+        print(f"save {pt_path}")
     else:
         PSSM_Alphabet = "ARNDCQEGHILKMFPSTWYV"
         Bio_Alphabet = "".join([index_to_one(i) for i in range(20)])
         energy_data_list = []
 
+        txt_path = os.path.join(
+            save_dir, os.path.basename(pdb_file).replace(".pdb", "_pred_mask.txt")
+        )
         with open(
-            os.path.join(
-                save_dir, os.path.basename(pdb_file).replace(".pdb", "_pred_mask.txt")
-            ),
+            txt_path,
             "w",
         ) as f:
             for pos, aa in enumerate(protbb.seq):
@@ -117,33 +118,27 @@ def make_one_scan(
             energy_data = energy_data.T.reset_index()
 
             # Save the DataFrame to a CSV file
+            csv_path = os.path.join(
+                save_dir,
+                os.path.basename(pdb_file).replace(".pdb", "_pred_mask.csv"),
+            )
             energy_data.to_csv(
-                os.path.join(
-                    save_dir,
-                    os.path.basename(pdb_file).replace(".pdb", "_pred_mask.csv"),
-                ),
+                csv_path,
                 index=False,
             )
-            print(f'Saved {os.path.join(
-                    save_dir,
-                    os.path.basename(pdb_file).replace(".pdb", "_pred_mask.csv"),
-                )}')
+            print(f"Saved {csv_path} , {txt_path}")
 
 
 def main(args):
-    input_dir = args.input_dir
     pdb_filename = args.pdb_filename
-    check_plddt = args.check_plddt
-    plddt_cutoff = args.plddt_cutoff
-    n_jobs = args.n_jobs
     device = args.device
     save_dir = args.save_dir
     os.makedirs(save_dir, exist_ok=True)
 
-    run_dir = bool(input_dir)
 
-    # device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    # device= torch.device(device)
+    device = 'cuda' if torch.cuda.is_available() and device =='cuda' else 'cpu'
+    device= torch.device(device)
+    print(f'using device {device}')
     torch_model_c = get_torch_model(
         os.path.join(script_dir, "..", "pythia-c.pt"), device=device
     )
@@ -151,25 +146,15 @@ def main(args):
         os.path.join(script_dir, "..", "pythia-p.pt"), device=device
     )
 
-    if run_dir:
-        files = glob.glob(f"{input_dir}*.pdb")
-        print(len(files))
-        if check_plddt:
-            confident_list = []
-            for pdb_file in tqdm(files):
-                plddt = cal_plddt(pdb_file)
-                if plddt > plddt_cutoff:
-                    confident_list.append(pdb_file)
-            files = confident_list
-        Parallel(n_jobs=n_jobs)(
-            delayed(make_one_scan)(
-                pdb_file, [torch_model_c, torch_model_p], device, False, save_dir
-            )
-            for pdb_file in tqdm(files)
-        )
 
     if pdb_filename:
-        make_one_scan(pdb_file=pdb_filename, torch_models=[torch_model_c, torch_model_p], device=device, save_pt=False, save_dir=save_dir)
+        make_one_scan(
+            pdb_file=pdb_filename,
+            torch_models=[torch_model_c, torch_model_p],
+            device=device,
+            save_pt=False,
+            save_dir=save_dir,
+        )
 
 
 if __name__ == "__main__":
@@ -177,26 +162,12 @@ if __name__ == "__main__":
         description="Command line interface for the given code."
     )
     parser.add_argument(
-        "--input_dir",
-        type=str,
-        default="../s669_AF_PDBs/",
-        help="Input directory path.",
-    )
-    parser.add_argument(
         "--pdb_filename",
         type=str,
         default=None,
         help="Path to a specific PDB filename.",
     )
-    parser.add_argument(
-        "--check_plddt", action="store_true", help="Flag to check pLDDT value."
-    )
-    parser.add_argument(
-        "--plddt_cutoff", type=float, default=95, help="pLDDT cutoff value."
-    )
-    parser.add_argument(
-        "--n_jobs", type=int, default=2, help="Number of parallel jobs."
-    )
+    
     parser.add_argument("--device", type=str, default="cpu", help="Try to use cpu")
     parser.add_argument(
         "--save_dir", type=str, default="./pythia_predictions", help="Set save dir."
