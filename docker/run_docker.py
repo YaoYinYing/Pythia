@@ -99,10 +99,15 @@ def main(argv):
         [
             f"--device={FLAGS.device}",
             f"--n_jobs={FLAGS.n_jobs}",
-            f"--check_plddt={FLAGS.check_plddt}",
-            f"--plddt_cutoff={FLAGS.plddt_cutoff}",
         ]
     )
+    if FLAGS.check_plddt:
+        command_args.extend(
+            [
+                f"--check_plddt",
+                f"--plddt_cutoff={FLAGS.plddt_cutoff}",
+            ]
+        )
 
     print(command_args)
 
