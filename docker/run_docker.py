@@ -81,18 +81,17 @@ def main(argv):
     mounts = []
     command_args = []
 
-    input_dir = pathlib.Path(FLAGS.input_dir).resolve()
-    pdb_filename = pathlib.Path(FLAGS.pdb_filename).resolve()
-
     # os.makedirs(save_dir, exist_ok=True)
-    if not input_dir and not pdb_filename:
+    if not FLAGS.input_dir and not FLAGS.pdb_filename:
         raise app.UsageError("Please specify input pdb file or path!")
-    if input_dir:
+    if FLAGS.input_dir:
+        input_dir = pathlib.Path(FLAGS.input_dir).resolve()
         input_target_path = os.path.join(_ROOT_MOUNT_DIRECTORY, "input")
         mounts.append(types.Mount(input_target_path, str(input_dir), type="bind"))
         command_args.append(f"--input_dir={input_target_path}")
-    elif pdb_filename:
-        input_target_path = os.path.join(_ROOT_MOUNT_DIRECTORY, "output")
+    elif FLAGS.pdb_filename:
+        pdb_filename = pathlib.Path(FLAGS.pdb_filename).resolve()
+        input_target_path = os.path.join(_ROOT_MOUNT_DIRECTORY, "input")
         mounts.append(types.Mount(input_target_path, str(pdb_filename), type="bind"))
         command_args.append(f"--pdb_filename={input_target_path}")
 
@@ -126,5 +125,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-
     app.run(main)
