@@ -64,3 +64,9 @@ jobs:
         repository: yaoyinying/pythia-wubianlab
         readme-filepath: ./README.md
         enable-url-completion: true
+
+    - name: Install pybiolib package
+      run: pip3 install -U pybiolib
+      
+    - name: Build and push biolib application
+      run: BIOLIB_TOKEN=${{ secrets.BIOLIB_TOKEN }}  biolib push YaoYinYing/pythia-wubianlab

@@ -1,0 +1,27 @@
+biolib_version: 2
+modules:
+    main:
+        image: 'dockerhub://yaoyinying/pythia-wubianlab:latest'
+        working_directory: /home/biolib/
+        input_files:
+            - COPY / /home/biolib/
+        output_files:
+            - COPY /home/biolib/ /
+        source_files: []
+
+arguments:
+    -
+        default_value: /input.pdb
+        description: 'Enter/Upload your structure in PDB format: '
+        key: '--pdb_filename'
+        key_value_separator: '='
+        required: true
+        type: text-file
+
+    
+
+description_file: README.md
+
+
+
+
