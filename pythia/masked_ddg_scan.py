@@ -71,21 +71,17 @@ def make_one_scan(
             for prob in probs:
                 energy += -np.log(prob[pos] / prob[pos][aa_index])
             data_dict[f"{one_letter_aa}_{pos+1}"] = np.float16(energy)
-        pt_path = os.path.join(
-            save_dir, os.path.basename(pdb_file).replace(".pdb", "_pred_mask.pt")
-        )
-        torch.save(data_dict, pt_path)
-        print(f"save {pt_path}")
+        torch.save(data_dict, os.path.basename(pdb_file).replace(".pdb", "_pred_mask.pt"))
+        print(f'save {os.path.basename(pdb_file).replace(".pdb", "_pred_mask.pt")}')
     else:
         PSSM_Alphabet = "ARNDCQEGHILKMFPSTWYV"
         Bio_Alphabet = "".join([index_to_one(i) for i in range(20)])
         energy_data_list = []
 
-        txt_path = os.path.join(
-            save_dir, os.path.basename(pdb_file).replace(".pdb", "_pred_mask.txt")
-        )
         with open(
-            txt_path,
+            os.path.join(
+                save_dir, os.path.basename(pdb_file).replace(".pdb", "_pred_mask.txt")
+            ),
             "w",
         ) as f:
             for pos, aa in enumerate(protbb.seq):
@@ -121,15 +117,17 @@ def make_one_scan(
             energy_data = energy_data.T.reset_index()
 
             # Save the DataFrame to a CSV file
-            csv_path = os.path.join(
-                save_dir,
-                os.path.basename(pdb_file).replace(".pdb", "_pred_mask.csv"),
-            )
             energy_data.to_csv(
-                csv_path,
+                os.path.join(
+                    save_dir,
+                    os.path.basename(pdb_file).replace(".pdb", "_pred_mask.csv"),
+                ),
                 index=False,
             )
-            print(f"Saved {csv_path} , {txt_path}")
+            print(f'Saved {os.path.join(
+                    save_dir,
+                    os.path.basename(pdb_file).replace(".pdb", "_pred_mask.csv"),
+                )}')
 
 
 def main(args):
@@ -171,13 +169,7 @@ def main(args):
         )
 
     if pdb_filename:
-        make_one_scan(
-            pdb_file=pdb_filename,
-            torch_models=[torch_model_c, torch_model_p],
-            device=device,
-            save_pt=False,
-            save_dir=save_dir,
-        )
+        make_one_scan(pdb_file=pdb_filename, torch_models=[torch_model_c, torch_model_p], device=device, save_pt=False, save_dir=save_dir)
 
 
 if __name__ == "__main__":
