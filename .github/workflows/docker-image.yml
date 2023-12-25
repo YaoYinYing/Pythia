@@ -45,8 +45,8 @@ jobs:
         python -m venv pythia-wubianlab_test
         source pythia-wubianlab_test/bin/activate
         pip install -r docker/requirements.txt
-        tar zf ${{ env.REPO }}/s669_AF_PDBs.tar.gz
-        python ${{ env.REPO }}/docker/run_docker.py --input_dir s669_AF_PDBs
+        tar xf ${{ env.REPO }}/s669_AF_PDBs.tar.gz
+        python ${{ env.REPO }}/docker/run_docker.py --input_dir ./s669_AF_PDBs
         deactivate 
         
     - name: Push Docker image

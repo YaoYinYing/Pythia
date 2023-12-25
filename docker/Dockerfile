@@ -1,5 +1,5 @@
 # set ubuntu as backend OS
-FROM ubuntu:20.04
+FROM ubuntu:24.04
 
 # Use bash to support string substitution.
 SHELL ["/bin/bash", "-c"]
