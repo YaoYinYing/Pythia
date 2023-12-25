@@ -14,9 +14,8 @@ COPY . /app/pythia
 
 # Install pip packages.
 RUN pip3 -q install --no-cache-dir --upgrade pip \
-    && pip3 -q install -r /app/pythia/requirements.txt \
-    && pip3 uninstall  torchaudio torchvision -y \
-    && pip3 -q install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu \
+    && pip3 -q install --no-cache-dir  -r /app/pythia/requirements.txt \
+    && pip3 -q install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
     
 
 
