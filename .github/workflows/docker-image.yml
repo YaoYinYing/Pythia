@@ -1,0 +1,57 @@
+name: Pythia Docker Workflow
+
+on:
+  push:
+    paths:
+      - 'docker/**' # Monitor the entire 'docker' directory
+      - 'pythia/**' # Monitor the entire 'scripts' directory
+      - '.github/workflows/docker-image.yml' # monitor the main workflow script. enable it again if in necessary maintainances.
+      #- '.biolib/config.yml'  # Monitor the Biolib config file
+
+    branches:
+      - docker
+    
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set environment variable with current date
+      run: |
+        echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+        echo "DATE: ${{ env.DATE }}"
+    
+    - name: Set environment variable with current repo dir
+      run: |
+        echo "REPO=$PWD" >> $GITHUB_ENV
+        echo "REPO: ${{ env.REPO }}"
+      
+    - name: Build Docker image
+      run: docker build -f docker/Dockerfile -t pythia-wubianlab .
+
+    - name: Tag Docker image with date and latest
+      run: |
+        docker tag pythia-wubianlab yaoyinying/pythia-wubianlab:${{ env.DATE }}
+        docker tag pythia-wubianlab yaoyinying/pythia-wubianlab:latest
+
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.DOCKER_GITHUB_REPO_SECRET }}" | docker login -u yaoyinying --password-stdin
+
+    - name: Testing
+      run: |
+        python -m venv pythia-wubianlab_test
+        source pythia-wubianlab_test/bin/activate
+        pip install -r docker/requirements.txt
+        tar zf ${{ env.REPO }}/s669_AF_PDBs.tar.gz
+        python ${{ env.REPO }}/docker/run_docker.py --input_dir s669_AF_PDBs
+        deactivate 
+        
+    - name: Push Docker image
+      run: |
+        cd ${{ env.REPO }}
+        docker push yaoyinying/pythia-wubianlab:${{ env.DATE }}
+        docker push yaoyinying/pythia-wubianlab:latest
+
