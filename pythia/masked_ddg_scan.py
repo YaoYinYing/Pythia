@@ -71,8 +71,8 @@ def make_one_scan(
             for prob in probs:
                 energy += -np.log(prob[pos] / prob[pos][aa_index])
             data_dict[f"{one_letter_aa}_{pos+1}"] = np.float16(energy)
-        torch.save(data_dict, f'{pdb_file.replace(".pdb", "")}_pred_mask.pt')
-        print(f"save {pdb_file.replace('.pdb', '')}_pred_mask.pt")
+        torch.save(data_dict, os.path.basename(pdb_file).replace(".pdb", "_pred_mask.pt"))
+        print(f'save {os.path.basename(pdb_file).replace(".pdb", "_pred_mask.pt")}')
     else:
         PSSM_Alphabet = "ARNDCQEGHILKMFPSTWYV"
         Bio_Alphabet = "".join([index_to_one(i) for i in range(20)])
@@ -124,7 +124,10 @@ def make_one_scan(
                 ),
                 index=False,
             )
-            print(f"Saved {pdb_file.replace('.pdb', '')}_pred_mask.csv")
+            print(f'Saved {os.path.join(
+                    save_dir,
+                    os.path.basename(pdb_file).replace(".pdb", "_pred_mask.csv"),
+                )}')
 
 
 def main(args):
@@ -160,13 +163,13 @@ def main(args):
             files = confident_list
         Parallel(n_jobs=n_jobs)(
             delayed(make_one_scan)(
-                pdb_file, [torch_model_c, torch_model_p], device, save_dir
+                pdb_file, [torch_model_c, torch_model_p], device, False, save_dir
             )
             for pdb_file in tqdm(files)
         )
 
     if pdb_filename:
-        make_one_scan(pdb_filename, [torch_model_c, torch_model_p], device, save_dir)
+        make_one_scan(pdb_file=pdb_filename, torch_models=[torch_model_c, torch_model_p], device=device, save_pt=False, save_dir=save_dir)
 
 
 if __name__ == "__main__":
