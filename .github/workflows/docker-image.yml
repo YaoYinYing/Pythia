@@ -6,7 +6,7 @@ on:
       - 'docker/**' # Monitor the entire 'docker' directory
       - 'pythia/**' # Monitor the entire 'scripts' directory
       - '.github/workflows/docker-image.yml' # monitor the main workflow script. enable it again if in necessary maintainances.
-      #- '.biolib/config.yml'  # Monitor the Biolib config file
+      - '.biolib/config.yml'  # Monitor the Biolib config file
 
     branches:
       - docker

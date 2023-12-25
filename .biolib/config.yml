@@ -2,7 +2,7 @@ biolib_version: 2
 modules:
     main:
         image: 'dockerhub://yaoyinying/pythia-wubianlab:latest'
-        command:  --save_dir /home/biolib/pythia_wubianlab/save_dir
+        command:  --save_dir /home/biolib/pythia_wubianlab/save_dir/
         working_directory: /home/biolib/
         input_files:
             - COPY / /home/biolib/
@@ -17,7 +17,7 @@ arguments:
         key: '--pdb_filename'
         key_value_separator: '='
         required: true
-        type: text-file
+        type: file
 
     
 
