@@ -24,7 +24,7 @@ flags.DEFINE_string("pdb_filename", None, "Path to a specific PDB filename.")
 
 
 flags.DEFINE_bool(
-    "check_plddt", True, "Generate a human-friendly report file in xlsx format"
+    "check_plddt", False, "Generate a human-friendly report file in xlsx format"
 )
 
 flags.DEFINE_float("plddt_cutoff", 95, "pLDDT cutoff value.")
