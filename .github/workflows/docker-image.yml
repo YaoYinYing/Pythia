@@ -47,7 +47,7 @@ jobs:
         pip install -r docker/requirements.txt
         tar xf ${{ env.REPO }}/s669_AF_PDBs.tar.gz
         python ${{ env.REPO }}/docker/run_docker.py --input_dir ./s669_AF_PDBs
-        ls ./s669_AF_PDBs | grep '.csv' 
+        ls ./s669_AF_PDBs
         deactivate 
         
     - name: Push Docker image
