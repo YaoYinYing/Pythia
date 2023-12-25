@@ -13,6 +13,9 @@ COPY . /app/pythia
 
 RUN pip -q install --no-cache-dir  -r /app/pythia/requirements.txt
 
+# Add SETUID bit to the ldconfig binary so that non-root users can run it.
+RUN chmod u+s /sbin/ldconfig.real
+
 WORKDIR /app/pythia
 
 RUN echo $'#!/bin/bash\n\
