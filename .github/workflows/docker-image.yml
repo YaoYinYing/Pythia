@@ -61,7 +61,7 @@ jobs:
       with:
         username: yaoyinying
         password: ${{ secrets.DOCKER_GITHUB_REPO_SECRET }}
-        repository: yaoyinying/pythia_wubianlab
+        repository: yaoyinying/pythia-wubianlab
         readme-filepath: ./README.md
         enable-url-completion: true
 
