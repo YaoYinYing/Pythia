@@ -55,3 +55,11 @@ jobs:
         docker push yaoyinying/pythia-wubianlab:${{ env.DATE }}
         docker push yaoyinying/pythia-wubianlab:latest
 
+    - name: Refresh Docker Hub Description
+      uses: peter-evans/dockerhub-description@v3
+      with:
+        username: yaoyinying
+        password: ${{ secrets.DOCKER_GITHUB_REPO_SECRET }}
+        repository: yaoyinying/pythia-wubianlab
+        readme-filepath: ./README.md
+        enable-url-completion: true
